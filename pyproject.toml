@@ -1,0 +1,26 @@
+[project]
+name = "template-project"
+version = "0.1.0"
+description = "A template for API apps"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi>=0.115.8",
+    "pydantic>=2.10.6",
+    "pydantic-ai>=0.0.24",
+    "uvicorn>=0.34.0",
+]
+
+[project.optional-dependencies]
+logfire = [
+    "pydantic-ai>=0.0.24",
+]
+
+[dependency-groups]
+dev = [
+    "black>=25.1.0",
+    "flake8>=7.1.2",
+    "isort>=6.0.0",
+    "mypy>=1.15.0",
+    "pytest>=8.3.4",
+]

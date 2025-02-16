@@ -1,0 +1,13 @@
+version: "3.8"
+services:
+  api:
+    build: .
+    container_name: template-project
+    volumes:
+      - .:/app  # Mount local directory for live updates
+    ports:
+      - "8000:8000"  # Expose FastAPI to localhost
+    environment:
+      - PYTHONUNBUFFERED=1  # Ensures real-time logs
+    working_dir: /app
+    tty: true  # Keeps the container running
