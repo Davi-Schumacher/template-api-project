@@ -6,14 +6,7 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "fastapi>=0.115.8",
-    "pydantic>=2.10.6",
-    "pydantic-ai>=0.0.24",
     "uvicorn>=0.34.0",
-]
-
-[project.optional-dependencies]
-logfire = [
-    "pydantic-ai>=0.0.24",
 ]
 
 [dependency-groups]
