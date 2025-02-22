@@ -1,0 +1,25 @@
+services:
+  dev:
+    build:
+      context: .
+      target: dev
+    container_name: template_project_dev
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./src:/app/src
+      - ./tests:/app/tests
+    environment:
+      - PYTHONPATH=/app
+    command: ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+
+  prod:
+    build:
+      context: .
+      target: production
+    container_name: template_project_prod
+    ports:
+      - "8001:8000"
+    environment:
+      - PYTHONPATH=/app
+    command: ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
