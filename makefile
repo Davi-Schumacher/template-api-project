@@ -1,56 +1,53 @@
 # Define variables
-COMPOSE=docker-compose
-DEV_IMAGE=template-project-dev
-PROD_IMAGE=template-project-prod
+DC=docker compose
 SERVICE_DEV=template_project_dev
 SERVICE_PROD=template_project_prod
 
 # ===== BUILD =====
 # Build the production image
 build-prod:
-	docker build --target production -t $(PROD_IMAGE) .
+	$(DC) build prod
 
 # Build the development image (with dev dependencies)
 build-dev:
-	docker build --target dev -t $(DEV_IMAGE) .
+	$(DC) build dev
 
 # ===== RUN CONTAINERS =====
 # Run the production container
 run-prod:
-	docker run -p 8000:8000 --name $(SERVICE_PROD) $(PROD_IMAGE)
+	$(DC) up prod -d --build
 
 # Run the development container with auto-reload
 run-dev:
-	docker run -p 8000:8000 --name $(SERVICE_DEV) $(DEV_IMAGE)
+	$(DC) up dev -d --build
 
 # ===== DEVELOPMENT COMMANDS =====
 # Start a bash shell inside the dev container
-shell-dev:
-	docker exec -it $(SERVICE_DEV) bash
+shell-dev: run-dev
+	$(DC) exec dev bash
 
 # Start a bash shell inside the production container
-shell-prod:
-	docker exec -it $(SERVICE_PROD) bash
-
-# Install dependencies inside the dev container
-install-dev:
-	docker exec -it $(SERVICE_DEV) uv sync --frozen
+shell-prod: run-prod
+	$(DC) exec prod bash
 
 # Tail logs from the dev container
 logs-dev:
-	docker logs -f $(SERVICE_DEV)
+	$(DC) logs -f dev
 
 # Tail logs from the prod container
 logs-prod:
-	docker logs -f $(SERVICE_PROD)
+	$(DC) logs -f prod
 
 # Stop and remove all containers
 down:
-	docker rm -f $(SERVICE_DEV) $(SERVICE_PROD) || true
+	$(DC) down
 
 # Clean up unused Docker resources
 clean:
 	docker system prune -f
 
+# Run tests
 test:
-	docker exec -it $(SERVICE_DEV) bash -c "pytest ."
+	$(DC) up dev -d --build
+	$(DC) exec -T dev pytest .
+	$(DC) stop dev
