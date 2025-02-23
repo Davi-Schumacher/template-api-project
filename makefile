@@ -46,8 +46,34 @@ down:
 clean:
 	docker system prune -f
 
-# Run tests
-test:
-	$(DC) up dev -d --build
-	$(DC) exec -T dev pytest .
+# Run CI checks
+ci: run-dev
+	$(DC) exec -T dev black --check src tests
+	$(DC) exec -T dev isort --check src tests
+	$(DC) exec -T dev flake8 src tests
+	$(DC) exec -T dev mypy src tests
+	$(DC) exec -T dev pytest tests
 	$(DC) stop dev
+
+# Format code with black
+black:
+	$(DC) exec -T dev black src tests
+
+# Sort imports with isort
+isort:
+	$(DC) exec -T dev isort --profile black src tests
+
+# Run flake8 linting
+flake8:
+	$(DC) exec -T dev flake8 src tests
+
+# Run mypy type checking
+mypy:
+	$(DC) exec -T dev mypy src tests
+
+# Run pytest
+pytest:
+	$(DC) exec -T dev pytest tests
+
+# Run all formatting
+format: black isort
