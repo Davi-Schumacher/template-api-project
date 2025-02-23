@@ -23,12 +23,12 @@ run-dev:
 
 # ===== DEVELOPMENT COMMANDS =====
 # Start a bash shell inside the dev container
-shell-dev: run-dev
-	$(DC) exec dev bash
+shell-dev:
+	@$(DC) exec dev bash 2>/dev/null || ($(DC) up dev -d --build && $(DC) exec dev bash)
 
 # Start a bash shell inside the production container
-shell-prod: run-prod
-	$(DC) exec prod bash
+shell-prod:
+	@$(DC) exec prod bash 2>/dev/null || ($(DC) up prod -d --build && $(DC) exec prod bash)
 
 # Tail logs from the dev container
 logs-dev:

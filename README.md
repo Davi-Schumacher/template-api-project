@@ -16,7 +16,7 @@ To start the development container, run:
 make run-dev
 ```
 
-You can then see the swagger UI at [http://localhost:8000/docs](http://localhost:8000/docs)
+You can then see the swagger UI at [http://localhost:8000/docs](http://localhost:8000/docs). The `/src` and `/tests` directories are mounted into the container, so you can edit the code and run the tests live.
 
 To stop the development container, run:
 
