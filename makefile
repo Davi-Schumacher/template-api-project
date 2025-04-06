@@ -76,7 +76,7 @@ mypy:  ## Run mypy type checking
 	$(DC) run --rm -T dev mypy src tests
 	$(DC) stop dev
 
-ci:  ## Run CI checks
+ci: start-dev-db  ## Run CI checks
 	$(DC) run --rm -T dev sh -c "\
 		uv run ruff format src tests && \
 		uv run ruff check --select I src tests && \

@@ -1,10 +1,10 @@
 from fastapi import FastAPI
 
-from src.api.routes import router
+from src.api.users import user_router
 
 app = FastAPI()
 
-app.include_router(router)
+app.include_router(user_router)
 
 
 @app.get("/")
