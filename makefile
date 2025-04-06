@@ -1,3 +1,8 @@
+.PHONY: help
+
+help:
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+
 # Define variables
 DC=docker compose
 SERVICE_DEV=template_project_dev
@@ -5,73 +10,76 @@ SERVICE_PROD=template_project_prod
 export COMPOSE_BAKE=true
 
 # ===== BUILD =====
-# Build the production image
-build-prod:
+build-prod:  ## Build the production image
 	$(DC) build prod
 
-# Build the development image (with dev dependencies)
-build-dev:
+build-dev:  ## Build the development image (with dev dependencies)
 	$(DC) build dev
 
+rebuild-dev:  ## Build the development image with no cache
+	$(DC) build dev --no-cache
+
 # ===== RUN CONTAINERS =====
-# Run the production container
-run-prod:
+start-dev-db:  ## Run the development database container
+	$(DC) up dev_db -d --build
+
+run-prod:  ## Run the production container
 	$(DC) up prod -d --build
 
-# Run the development container with auto-reload
-run-dev:
+run-dev: start-dev-db  ## Run the development container with auto-reload
 	$(DC) up dev -d --build
 
+run-dev-pytest: start-dev-db  ## Run the pytest container with debug
+	$(DC) up dev_debug_pytest -d --build
+
+wipe-db:  ## Wipe the database by removing the volume and recreating it
+	$(DC) down -v
+	@echo "Database has been wiped. Run 'make run-dev' to start fresh."
+
 # ===== DEVELOPMENT COMMANDS =====
-# Start a bash shell inside the dev container
-shell-dev:
+shell-dev:  ## Start a bash shell inside the dev container
 	@$(DC) exec dev bash 2>/dev/null || ($(DC) up dev -d --build && $(DC) exec dev bash)
 
-# Start a bash shell inside the production container
-shell-prod:
+shell-prod:  ## Start a bash shell inside the production container
 	@$(DC) exec prod bash 2>/dev/null || ($(DC) up prod -d --build && $(DC) exec prod bash)
 
-# Tail logs from the dev container
-logs-dev:
+logs-dev:  ## Tail logs from the dev container
 	$(DC) logs -f dev
 
-# Tail logs from the prod container
-logs-prod:
+logs-prod:  ## Tail logs from the prod container
 	$(DC) logs -f prod
 
-# Stop and remove all containers
-down:
+down:  ## Stop and remove all containers
 	$(DC) down
 
-# Clean up unused Docker resources
-clean:
+clean:  ## Clean up unused Docker resources
 	docker system prune -f
 
-# Run formatting
-format: run-dev
-	$(DC) exec -T dev uv run ruff format src tests
+format:  ## Run formatting
+	$(DC) run --rm -T dev uv run ruff format src tests
 	$(DC) stop dev
 
-# Run linting
-lint: run-dev
-	$(DC) exec -T dev uv run ruff check src tests
+lint:  ## Run linting
+	$(DC) run --rm -T dev uv run ruff check --select I --fix src tests
 	$(DC) stop dev
 
-# Run pytest
-pytest: run-dev
-	$(DC) exec -T dev pytest tests
+pytest: start-dev-db  ## Run pytest
+	$(DC) run --rm -T dev pytest tests
+	$(DC) stop dev_db
+
+pytest-debug: start-dev-db run-dev-pytest  ## Run pytest with debug
+	$(DC) exec dev_debug_pytest python -m debugpy --listen 0.0.0.0:5679 --wait-for-client -m pytest tests
+	$(DC) stop dev_debug_pytest
+	$(DC) stop dev_db
+
+mypy:  ## Run mypy type checking
+	$(DC) run --rm -T dev mypy src tests
 	$(DC) stop dev
 
-# Run mypy type checking
-mypy: run-dev
-	$(DC) exec -T dev mypy src tests
-	$(DC) stop dev
-
-# Run CI checks
-ci: run-dev
-	$(DC) exec -T dev sh -c "\
+ci:  ## Run CI checks
+	$(DC) run --rm -T dev sh -c "\
 		uv run ruff format src tests && \
-		uv run ruff check src tests && \
+		uv run ruff check --select I src tests && \
 		uv run mypy src tests && \
 		uv run pytest tests"
 	$(DC) stop dev
