@@ -1,5 +1,6 @@
 services:
   dev:
+    image: template-api-project:dev
     build:
       context: .
       target: dev
@@ -14,6 +15,7 @@ services:
     command: ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
 
   prod:
+    image: template-api-project:prod
     build:
       context: .
       target: production

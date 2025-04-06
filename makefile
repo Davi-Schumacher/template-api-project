@@ -2,6 +2,7 @@
 DC=docker compose
 SERVICE_DEV=template_project_dev
 SERVICE_PROD=template_project_prod
+export COMPOSE_BAKE=true
 
 # ===== BUILD =====
 # Build the production image
@@ -46,34 +47,31 @@ down:
 clean:
 	docker system prune -f
 
-# Run CI checks
-ci: run-dev
-	$(DC) exec -T dev black --check src tests
-	$(DC) exec -T dev isort --check src tests
-	$(DC) exec -T dev flake8 src tests
-	$(DC) exec -T dev mypy src tests
+# Run formatting
+format: run-dev
+	$(DC) exec -T dev uv run ruff format src tests
+	$(DC) stop dev
+
+# Run linting
+lint: run-dev
+	$(DC) exec -T dev uv run ruff check src tests
+	$(DC) stop dev
+
+# Run pytest
+pytest: run-dev
 	$(DC) exec -T dev pytest tests
 	$(DC) stop dev
 
-# Format code with black
-black:
-	$(DC) exec -T dev black src tests
-
-# Sort imports with isort
-isort:
-	$(DC) exec -T dev isort --profile black src tests
-
-# Run flake8 linting
-flake8:
-	$(DC) exec -T dev flake8 src tests
-
 # Run mypy type checking
-mypy:
+mypy: run-dev
 	$(DC) exec -T dev mypy src tests
+	$(DC) stop dev
 
-# Run pytest
-pytest:
-	$(DC) exec -T dev pytest tests
-
-# Run all formatting
-format: black isort
+# Run CI checks
+ci: run-dev
+	$(DC) exec -T dev sh -c "\
+		uv run ruff format src tests && \
+		uv run ruff check src tests && \
+		uv run mypy src tests && \
+		uv run pytest tests"
+	$(DC) stop dev
