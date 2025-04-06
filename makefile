@@ -13,14 +13,34 @@ build-prod:
 build-dev:
 	$(DC) build dev
 
+# Build the development image with no cache
+rebuild-dev:
+	$(DC) build dev --no-cache
+
+# Build the development database
+build-dev-db:
+	$(DC) build dev_db
+
+# Build the development database with no cache
+rebuild-dev-db:
+	$(DC) build dev_db --no-cache
+
 # ===== RUN CONTAINERS =====
+start-dev-db:
+	$(DC) up dev_db -d --build
+
 # Run the production container
 run-prod:
 	$(DC) up prod -d --build
 
 # Run the development container with auto-reload
-run-dev:
+run-dev: start-dev-db
 	$(DC) up dev -d --build
+
+# Wipe the database by removing the volume and recreating it
+wipe-db:
+	$(DC) down -v
+	@echo "Database has been wiped. Run 'make run-dev' to start fresh."
 
 # ===== DEVELOPMENT COMMANDS =====
 # Start a bash shell inside the dev container
@@ -54,7 +74,7 @@ format: run-dev
 
 # Run linting
 lint: run-dev
-	$(DC) exec -T dev uv run ruff check src tests
+	$(DC) exec -T dev uv run ruff check --select I --fix src tests
 	$(DC) stop dev
 
 # Run pytest
@@ -71,7 +91,7 @@ mypy: run-dev
 ci: run-dev
 	$(DC) exec -T dev sh -c "\
 		uv run ruff format src tests && \
-		uv run ruff check src tests && \
+		uv run ruff check --select I src tests && \
 		uv run mypy src tests && \
 		uv run pytest tests"
 	$(DC) stop dev
