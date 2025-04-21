@@ -7,12 +7,47 @@ services:
     container_name: template_project_dev
     ports:
       - "8000:8000"
+      - "5678:5678"  # Debug port
     volumes:
       - ./src:/app/src
       - ./tests:/app/tests
     environment:
       - PYTHONPATH=/app
-    command: ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+      - DATABASE_URL=${DATABASE_URL}
+    command: bash -c "python src/db/init_db.py && python -m debugpy --listen 0.0.0.0:5678 -m uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload"
+    depends_on:
+      - dev_db
+
+  dev_debug_pytest:
+    image: template-api-project:dev
+    build:
+      context: .
+      target: dev
+    container_name: template_project_dev_debug_pytest
+    ports:
+      - "5679:5679"  # Debug port
+    volumes:
+      - ./src:/app/src
+      - ./tests:/app/tests
+    environment:
+      - PYTHONPATH=/app
+      - DATABASE_URL=${DATABASE_URL}
+    command: tail -f /dev/null
+    depends_on:
+      - dev_db
+
+  dev_db:
+    image: postgres:17
+    restart: always
+    container_name: template_project_dev_db
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
 
   prod:
     image: template-api-project:prod
@@ -25,3 +60,6 @@ services:
     environment:
       - PYTHONPATH=/app
     command: ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+volumes:
+  postgres_data:
