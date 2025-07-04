@@ -1,5 +1,4 @@
 from typing import Optional
-from uuid import UUID, uuid4
 
 from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
@@ -12,7 +11,7 @@ class Base(DeclarativeBase):
 class User(Base):
     __tablename__ = "user_account"
 
-    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(30))
     fullname: Mapped[Optional[str]]
 
@@ -25,7 +24,7 @@ class User(Base):
 class Address(Base):
     __tablename__ = "address"
 
-    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     email_address: Mapped[str]
     user_id = mapped_column(ForeignKey("user_account.id"))
 
