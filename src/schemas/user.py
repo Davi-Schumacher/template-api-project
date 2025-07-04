@@ -1,5 +1,4 @@
 from typing import Optional
-from uuid import UUID
 
 from pydantic import BaseModel, EmailStr
 
@@ -14,10 +13,10 @@ class UserRequest(UserName):
 
 
 class AddressResponse(BaseModel):
-    id: UUID
+    id: int
     email_address: EmailStr
 
 
 class UserResponse(UserName):
-    id: UUID
+    id: int
     addresses: list[AddressResponse]

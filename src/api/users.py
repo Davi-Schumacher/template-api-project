@@ -1,5 +1,4 @@
 from typing import Annotated
-from uuid import UUID
 
 from fastapi import APIRouter, Body, Depends, Query
 from sqlalchemy import select
@@ -57,7 +56,7 @@ async def create_user(
 
 @user_router.get("/{user_id}")
 async def get_user_account_info(
-    user_id: UUID, session: AsyncSession = Depends(get_async_session)
+    user_id: int, session: AsyncSession = Depends(get_async_session)
 ) -> UserResponse:
     user = await session.execute(
         select(User).options(selectinload(User.addresses)).filter(User.id == user_id)
